@@ -1,0 +1,8 @@
+{
+  "name": "teeth-cinematic",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": { "dev": "vite", "build": "vite build" },
+  "devDependencies": { "vite": "^5.4.10", "vite-plugin-singlefile": "^2.0.3" }
+}
