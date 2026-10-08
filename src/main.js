@@ -4,20 +4,25 @@ import { PHOTO, STAGES } from './teeth-map.js';
 
 // Photos live in src/img. They play in filename order: 01-..., 02-..., 03-...
 const files = import.meta.glob('./img/*.{jpg,jpeg,png,webp}', { eager: true, query: '?url', import: 'default' });
-const slides = Object.keys(files).sort().map((k) => ({ type: 'photo', src: files[k], stages: /human/i.test(k) ? STAGES : null }));
+const slides = Object.keys(files).sort().map((k) => ({ type: 'photo', src: files[k], human: /human/i.test(k), stages: null }));
 // first slide: the question
 slides.unshift({ type: 'title', text: 'What do these teeth belong to?' });
 
-// last slide: the 3D skull. Only added if this computer can draw 3D, so an old board just ends on the human photo.
+// After the human photo comes the 3D skull, then back to the human mouth where each click lights one tooth type.
+// The skull is only added if this computer can draw 3D. Without it, the human photo just does the glow once.
 function hasWebGL() {
   try {
     const c = document.createElement('canvas');
     return !!(c.getContext('webgl2') || c.getContext('webgl'));
   } catch (e) { return false; }
 }
-if (hasWebGL()) {
-  slides.push({ type: 'skull' });
+const humanAt = slides.findIndex((x) => x.human);
+if (humanAt >= 0 && hasWebGL()) {
+  slides.splice(humanAt + 1, 0, { type: 'skull' });
+  slides.splice(humanAt + 2, 0, { type: 'photo', src: slides[humanAt].src, human: true, stages: STAGES });
   setTimeout(() => preloadSkull().catch(() => {}), 1500);
+} else if (humanAt >= 0) {
+  slides[humanAt].stages = STAGES;
 }
 
 const stage = document.getElementById('stage');
@@ -174,19 +179,20 @@ function prev() {
   if (s && s.stages && lit > 0) { setStage(lit - 1); return; }
   show(index - 1);
 }
+// Tap the far left edge to go back, the far right edge to go forward.
+// Anywhere else a tap goes forward, except on the skull where dragging turns it.
 window.addEventListener('pointerdown', (e) => {
+  wake();
   if (e.button !== 0 && e.pointerType !== 'touch') return;
-  if (slides[index] && slides[index].type === 'skull') {
-    // on the skull, dragging turns it. Tap the far left or right edge to change slide.
-    const x = e.clientX / window.innerWidth;
-    if (x > 0.93) next(); else if (x < 0.07) prev();
-    return;
-  }
+  const x = e.clientX / window.innerWidth;
+  if (x < 0.07) { prev(); return; }
+  if (x > 0.93) { next(); return; }
+  if (slides[index] && slides[index].type === 'skull') return;
   next();
 });
 window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
-  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
+  else if (e.key === 'ArrowLeft' || e.key === 'PageUp' || e.key === 'Backspace') { e.preventDefault(); prev(); }
   else if (e.key === 'm' || e.key === 'M') muted = !muted;
   else if (e.key === 'f' || e.key === 'F') toggleFull();
 });

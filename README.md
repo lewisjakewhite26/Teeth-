@@ -6,14 +6,19 @@ Cinematic slideshow for the Year 3/4 science lesson on teeth (animals including 
 
 Open `teeth-lesson.html` in a browser. It works offline as a single file.
 
-- Click, Space, Right arrow or Page Down: next slide
-- Left arrow, Page Up or right-click: back
-- F or double-click: fullscreen
-- M: mute the transition sound
+Order: the question, then the animal photos, then the human mouth, the 3D skull, and back to the human mouth where each click lights one type of tooth.
+
+- Next: click or tap anywhere (not on the skull), tap the far right edge, Space, Right arrow or Page Down
+- Back: tap the far left edge, Left arrow, Page Up, Backspace or right-click
+- On the lit human teeth, next and back step through the four tooth types first
+- F: fullscreen (double-click does it too, except on the skull)
+- M: mute the sounds
+
+Faint arrows sit in the edge tap zones and brighten when the screen is touched.
 
 ## The human teeth glow
 
-On the human photo, each click lights one type of tooth before moving on: incisors (blue, cut and bite), canines (gold, grip and tear), premolars (green, crush), then molars (purple, grind). Left arrow steps back through them. The tooth positions are in `src/teeth-map.js`.
+On the second human mouth slide, after the skull, each click lights one type of tooth before moving on: incisors (blue, cut and bite), canines (gold, grip and tear), premolars (green, crush), then molars (purple, grind). Left arrow steps back through them. The tooth positions are in `src/teeth-map.js`.
 
 ## The 3D skull
 
