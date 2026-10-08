@@ -87,7 +87,7 @@ window.addEventListener('pointerdown', (e) => {
   if (slides[index] && slides[index].type === 'skull') {
     // on the skull, dragging turns it. Tap the far left or right edge to change slide.
     const x = e.clientX / window.innerWidth;
-    if (x > 0.9) next(); else if (x < 0.1) prev();
+    if (x > 0.93) next(); else if (x < 0.07) prev();
     return;
   }
   next();
@@ -99,7 +99,7 @@ window.addEventListener('keydown', (e) => {
   else if (e.key === 'f' || e.key === 'F') toggleFull();
 });
 window.addEventListener('contextmenu', (e) => { e.preventDefault(); prev(); });
-window.addEventListener('dblclick', toggleFull);
+window.addEventListener('dblclick', () => { if (!(slides[index] && slides[index].type === 'skull')) toggleFull(); });
 function toggleFull() {
   try { document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen(); } catch (e) { /* ignore */ }
 }

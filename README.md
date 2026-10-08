@@ -13,7 +13,14 @@ Open `teeth-lesson.html` in a browser. It works offline as a single file.
 
 ## The 3D skull
 
-On the last slide, drag to turn the skull and scroll or pinch to zoom. If nobody touches it, it drifts slowly left and right. Tapping the middle does nothing. Tap the far left or far right edge of the screen (or use the arrow keys) to go back or forward.
+The last slide is a 3D human skull.
+
+- Tap a tooth: it flies in and the tooth sits in the middle of the screen. Tap another tooth to move to that one.
+- Tap the black background (not the far edges): back to the whole skull.
+- One finger drag: turn it.
+- Two fingers: pinch to zoom, slide to move it. With a mouse, right-drag or shift-drag moves it and the wheel zooms.
+- Left alone, it drifts slowly left and right.
+- Tap the far left or far right edge of the screen, or use the arrow keys, to go back or forward.
 
 The model is `src/model/skull.glb`. It was trimmed from a male and female skull set to the male skull only, with smaller textures.
 
