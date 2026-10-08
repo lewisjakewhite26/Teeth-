@@ -1,9 +1,10 @@
 import './style.css';
 import { preloadSkull, mountSkull } from './skull.js';
+import { PHOTO, STAGES } from './teeth-map.js';
 
 // Photos live in src/img. They play in filename order: 01-..., 02-..., 03-...
 const files = import.meta.glob('./img/*.{jpg,jpeg,png,webp}', { eager: true, query: '?url', import: 'default' });
-const slides = Object.keys(files).sort().map((k) => ({ type: 'photo', src: files[k] }));
+const slides = Object.keys(files).sort().map((k) => ({ type: 'photo', src: files[k], stages: /human/i.test(k) ? STAGES : null }));
 // first slide: the question
 slides.unshift({ type: 'title', text: 'What do these teeth belong to?' });
 
@@ -21,6 +22,7 @@ if (hasWebGL()) {
 
 const stage = document.getElementById('stage');
 let index = -1;
+let lit = 0; // how many tooth types are lit on the human photo
 
 function show(i, first = false) {
   if (i < 0 || i >= slides.length || i === index) return;
@@ -51,16 +53,68 @@ function show(i, first = false) {
   } else {
     const kb = document.createElement('div');
     kb.className = 'kb';
+    const wrap = document.createElement('div');
+    wrap.className = 'wrap';
     const img = document.createElement('img');
     img.src = slides[i].src;
     img.draggable = false;
-    kb.appendChild(img);
+    wrap.appendChild(img);
+    if (slides[i].stages) {
+      wrap.insertAdjacentHTML('beforeend', buildGlow());
+      const cap = document.createElement('div');
+      cap.className = 'cap';
+      cap.innerHTML = '<div class="capname"></div><div class="capjob"></div>';
+      layer.appendChild(cap);
+    }
+    kb.appendChild(wrap);
     layer.appendChild(kb);
     stage.appendChild(layer);
   }
 
   index = i;
+  lit = 0;
   if (!first) swell();
+}
+
+// ---- the glow on the human teeth: each click lights one type ----
+function buildGlow() {
+  const g = STAGES.map((st, n) => {
+    const shapes = st.teeth.map(([x, y, rx, ry, r]) =>
+      `<ellipse cx="${x}" cy="${y}" rx="${rx}" ry="${ry}" transform="rotate(${r} ${x} ${y})"/>`).join('');
+    return `<g class="glow" data-n="${n}" style="--c:${st.colour}">` +
+      `<g class="tint" filter="url(#soft)">${shapes}</g><g class="halo" filter="url(#bloom)">${shapes}</g></g>`;
+  }).join('');
+  return `<svg class="glowsvg" viewBox="0 0 ${PHOTO.w} ${PHOTO.h}" preserveAspectRatio="xMidYMid meet">` +
+    `<defs><filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter>` +
+    `<filter id="bloom" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="26"/></filter></defs>${g}</svg>`;
+}
+function setStage(n) {
+  lit = n;
+  const layer = glowLayer();
+  if (!layer) return;
+  layer.querySelectorAll('.glow').forEach((el) => {
+    const k = +el.dataset.n;
+    el.classList.toggle('on', k === n - 1);
+    el.classList.toggle('dim', k < n - 1);
+  });
+  const name = layer.querySelector('.capname');
+  const job = layer.querySelector('.capjob');
+  const cap = layer.querySelector('.cap');
+  cap.classList.remove('show');
+  setTimeout(() => {
+    if (n > 0) {
+      const st = STAGES[n - 1];
+      name.textContent = st.name;
+      name.style.color = st.colour;
+      job.textContent = st.job;
+      cap.classList.add('show');
+    }
+  }, n > 0 ? 350 : 0);
+  if (n > 0) ping(n);
+}
+function glowLayer() {
+  const l = [...stage.querySelectorAll('.layer:not(.out)')].pop();
+  return l && l.querySelector('.glow') ? l : null;
 }
 
 // ---- quiet low sound under each change (M to mute) ----
@@ -97,9 +151,29 @@ function swell() {
   tone('triangle', 82, 123, 0.05, 2.2);     // faint tension above it
 }
 
+function ping(n) {
+  if (!ctx || muted || ctx.state !== 'running') return;
+  const t = ctx.currentTime;
+  const o = ctx.createOscillator(); const g = ctx.createGain();
+  o.type = 'sine'; o.frequency.value = 220 * Math.pow(1.25, n);
+  g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.12, t + 0.05); g.gain.exponentialRampToValueAtTime(0.0001, t + 1.4);
+  o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 1.5);
+}
+
 // ---- controls: click, space or right arrow = next. left arrow = back ----
-function next() { unlock(); show(index + 1); }
-function prev() { unlock(); show(index - 1); }
+// on the human photo, each click first lights the next type of tooth, then moves on
+function next() {
+  unlock();
+  const s = slides[index];
+  if (s && s.stages && lit < s.stages.length) { setStage(lit + 1); return; }
+  show(index + 1);
+}
+function prev() {
+  unlock();
+  const s = slides[index];
+  if (s && s.stages && lit > 0) { setStage(lit - 1); return; }
+  show(index - 1);
+}
 window.addEventListener('pointerdown', (e) => {
   if (e.button !== 0 && e.pointerType !== 'touch') return;
   if (slides[index] && slides[index].type === 'skull') {

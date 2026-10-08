@@ -11,6 +11,10 @@ Open `teeth-lesson.html` in a browser. It works offline as a single file.
 - F or double-click: fullscreen
 - M: mute the transition sound
 
+## The human teeth glow
+
+On the human photo, each click lights one type of tooth before moving on: incisors (blue, cut and bite), canines (gold, grip and tear), premolars (green, crush), then molars (purple, grind). Left arrow steps back through them. The tooth positions are in `src/teeth-map.js`.
+
 ## The 3D skull
 
 The last slide is a 3D human skull.
