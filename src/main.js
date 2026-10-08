@@ -4,6 +4,9 @@ import { preloadSkull, mountSkull } from './skull.js';
 // Photos live in src/img. They play in filename order: 01-..., 02-..., 03-...
 const files = import.meta.glob('./img/*.{jpg,jpeg,png,webp}', { eager: true, query: '?url', import: 'default' });
 const slides = Object.keys(files).sort().map((k) => ({ type: 'photo', src: files[k] }));
+// first slide: the question
+slides.unshift({ type: 'title', text: 'What do these teeth belong to?' });
+
 // last slide: the 3D skull. Only added if this computer can draw 3D, so an old board just ends on the human photo.
 function hasWebGL() {
   try {
@@ -35,7 +38,13 @@ function show(i, first = false) {
   const layer = document.createElement('div');
   layer.className = 'layer in';
   layer.style.setProperty('--d', d + 's');
-  if (slides[i].type === 'skull') {
+  if (slides[i].type === 'title') {
+    const t = document.createElement('div');
+    t.className = 'titletext';
+    t.textContent = slides[i].text;
+    layer.appendChild(t);
+    stage.appendChild(layer);
+  } else if (slides[i].type === 'skull') {
     layer.classList.add('skulllayer');
     stage.appendChild(layer);
     layer._destroy = mountSkull(layer).destroy;
