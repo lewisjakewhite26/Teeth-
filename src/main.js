@@ -4,8 +4,17 @@ import { preloadSkull, mountSkull } from './skull.js';
 // Photos live in src/img. They play in filename order: 01-..., 02-..., 03-...
 const files = import.meta.glob('./img/*.{jpg,jpeg,png,webp}', { eager: true, query: '?url', import: 'default' });
 const slides = Object.keys(files).sort().map((k) => ({ type: 'photo', src: files[k] }));
-slides.push({ type: 'skull' }); // last slide: the 3D skull
-setTimeout(preloadSkull, 1500);
+// last slide: the 3D skull. Only added if this computer can draw 3D, so an old board just ends on the human photo.
+function hasWebGL() {
+  try {
+    const c = document.createElement('canvas');
+    return !!(c.getContext('webgl2') || c.getContext('webgl'));
+  } catch (e) { return false; }
+}
+if (hasWebGL()) {
+  slides.push({ type: 'skull' });
+  setTimeout(() => preloadSkull().catch(() => {}), 1500);
+}
 
 const stage = document.getElementById('stage');
 let index = -1;
