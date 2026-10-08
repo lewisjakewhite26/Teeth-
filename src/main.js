@@ -1,8 +1,11 @@
 import './style.css';
+import { preloadSkull, mountSkull } from './skull.js';
 
 // Photos live in src/img. They play in filename order: 01-..., 02-..., 03-...
 const files = import.meta.glob('./img/*.{jpg,jpeg,png,webp}', { eager: true, query: '?url', import: 'default' });
-const slides = Object.keys(files).sort().map((k) => files[k]);
+const slides = Object.keys(files).sort().map((k) => ({ type: 'photo', src: files[k] }));
+slides.push({ type: 'skull' }); // last slide: the 3D skull
+setTimeout(preloadSkull, 1500);
 
 const stage = document.getElementById('stage');
 let index = -1;
@@ -16,21 +19,27 @@ function show(i, first = false) {
     old.style.setProperty('--d', d + 's');
     old.classList.remove('in');
     old.classList.add('out');
-    setTimeout(() => old.remove(), d * 1000 + 100);
+    setTimeout(() => { old._destroy?.(); old.remove(); }, d * 1000 + 100);
   });
 
   // ...while the new photo fades in on top
   const layer = document.createElement('div');
   layer.className = 'layer in';
   layer.style.setProperty('--d', d + 's');
-  const kb = document.createElement('div');
-  kb.className = 'kb';
-  const img = document.createElement('img');
-  img.src = slides[i];
-  img.draggable = false;
-  kb.appendChild(img);
-  layer.appendChild(kb);
-  stage.appendChild(layer);
+  if (slides[i].type === 'skull') {
+    layer.classList.add('skulllayer');
+    stage.appendChild(layer);
+    layer._destroy = mountSkull(layer).destroy;
+  } else {
+    const kb = document.createElement('div');
+    kb.className = 'kb';
+    const img = document.createElement('img');
+    img.src = slides[i].src;
+    img.draggable = false;
+    kb.appendChild(img);
+    layer.appendChild(kb);
+    stage.appendChild(layer);
+  }
 
   index = i;
   if (!first) swell();
@@ -73,7 +82,16 @@ function swell() {
 // ---- controls: click, space or right arrow = next. left arrow = back ----
 function next() { unlock(); show(index + 1); }
 function prev() { unlock(); show(index - 1); }
-window.addEventListener('pointerdown', (e) => { if (e.button === 0 || e.pointerType === 'touch') next(); });
+window.addEventListener('pointerdown', (e) => {
+  if (e.button !== 0 && e.pointerType !== 'touch') return;
+  if (slides[index] && slides[index].type === 'skull') {
+    // on the skull, dragging turns it. Tap the far left or right edge to change slide.
+    const x = e.clientX / window.innerWidth;
+    if (x > 0.9) next(); else if (x < 0.1) prev();
+    return;
+  }
+  next();
+});
 window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); next(); }
   else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prev(); }
