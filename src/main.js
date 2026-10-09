@@ -68,7 +68,7 @@ function show(i, first = false) {
       wrap.insertAdjacentHTML('beforeend', buildGlow());
       const cap = document.createElement('div');
       cap.className = 'cap';
-      cap.innerHTML = '<div class="capname"></div><div class="capjob"></div><div class="capdoes"></div><div class="capact"></div>';
+      cap.innerHTML = '<div class="capname"></div><div class="capjob"></div><div class="capdoes"></div>';
       layer.appendChild(cap);
     }
     kb.appendChild(wrap);
@@ -113,7 +113,6 @@ function setStage(n) {
       name.style.color = st.colour;
       job.textContent = st.job;
       layer.querySelector('.capdoes').textContent = st.does;
-      layer.querySelector('.capact').textContent = 'Try it: ' + st.act;
       cap.classList.add('show');
     }
   }, n > 0 ? 350 : 0);
